@@ -1,16 +1,16 @@
 # StackChallenge Builder Toolkit
 
-## 1. Clarity 4 Demo Contract
+## 1. Hello-world Contract (Clarity 2/3 compatible)
 - File: `contracts/hello-world.clar`
 - Features:
-  - Stores the contract owner plus the `stacks-block-time` of the latest owner update (Clarity 4 keyword).
-  - Read-only helpers: `get-owner` and `get-last-updated`.
-  - `set-owner` returns the new owner and timestamp after asserting the caller is the current owner.
+  - Stores the contract owner and ensures only the current owner can update it.
+  - Read-only helper: `get-owner`.
+  - `set-owner` returns the new owner after asserting the caller is the current owner.
 - Run locally with Clarinet:
   ```bash
   clarinet console
   (contract-call? .hello-world set-owner 'ST...NEW)
-  (contract-call? .hello-world get-last-updated)
+  (contract-call? .hello-world get-owner)
   ```
 
 ## 2. Chainhook Registration Script
@@ -48,6 +48,20 @@
 `npm install`
 - Runtime: `@hirosystems/chainhooks-client`, `express`
 - Dev: `ts-node`, `@types/node`, `@types/express`
+
+## Deployment Settings
+- Template configs live under `settings/Devnet.toml`, `settings/Testnet.toml`, and `settings/Mainnet.toml`.
+- **Never commit real seed phrases.** Use `clarinet deployments encrypt` to generate an encrypted mnemonic and store that value instead of a plaintext phrase.
+- If you temporarily paste a mnemonic for local testing, revert it to a placeholder before pushing or sharing the repo.
+
+## Tooling Notes
+- Clarinet `3.12.0` (Homebrew) is currently required; Clarity 4 keywords such as `stacks-block-time` are not yet available in the official CLI. Once Hiro releases a Clarinet build with Clarity 4 support, the contract can be updated to reintroduce the timestamp logic.
+
+## Deployed Contracts
+| Network  | Contract Identifier | Explorer link |
+|----------|--------------------|---------------|
+| Testnet  | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.hello-world` | [Tx 0xc17c…b89](https://explorer.hiro.so/txid/0xc17ccebd98129efaaabaaabf54fb57a2e1798d14dd4981206a9fdbb735ba8b89?chain=testnet) |
+| Mainnet  | `SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world` | [Explorer](https://explorer.hiro.so/contract/SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world?chain=mainnet) |
 
 ## Next Steps
 - Build a frontend with `@stacks/connect` + `@stacks/transactions` calling `set-owner`.
