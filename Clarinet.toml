@@ -1,0 +1,12 @@
+[project]
+name = "stackchallenge"
+description = "Clarinet project for the hello-world contract."
+authors = ["bayumulyana"]
+telemetry = false
+
+[contracts.hello-world]
+path = "contracts/hello-world.clar"
+depends_on = []
+
+[networks.devnet]
+chain = "devnet"
