@@ -49,6 +49,16 @@
 - Runtime: `@hirosystems/chainhooks-client`, `express`
 - Dev: `ts-node`, `@types/node`, `@types/express`
 
+## Testing
+- Jalankan semua tes: `npm test`
+- Jalankan lint: `npm run lint` (config minimal, abaikan TS sementara)
+- Struktur per-kontrak:  
+  - `tests/playground-token.test.ts` (transaksi di-skip karena serialisasi principal; edge cooldown aktif)  
+  - `tests/dev-badge.test.ts` (transfer principal di-skip; mint & edge cases aktif)  
+  - `tests/hello-world.test.ts` (transaksi set-owner di-skip; read-only aktif)  
+  - `tests/contracts.test.ts` adalah placeholder `describe.skip` untuk menghindari suite legacy.
+- Skips saat ini terkait limitasi principal serialization di clarinet-sdk. Aktifkan kembali saat SDK sudah mendukung.
+
 ## Deployment Settings
 - Template configs live under `settings/Devnet.toml`, `settings/Testnet.toml`, and `settings/Mainnet.toml`.
 - **Never commit real seed phrases.** Use `clarinet deployments encrypt` to generate an encrypted mnemonic and store that value instead of a plaintext phrase.

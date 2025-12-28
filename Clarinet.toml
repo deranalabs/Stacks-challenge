@@ -4,12 +4,26 @@ description = "Clarinet project for the hello-world contract."
 authors = ["derana"]
 telemetry = true
 cache_dir = "./.cache"
-epoch = "latest"
+requirements = []
 
 [contracts.hello-world]
 path = "contracts/hello-world.clar"
 depends_on = []
-epoch = "latest"
+
+# Trait contracts (declared before dependents)
+[contracts.sip-009-trait]
+path = "contracts/traits/sip-009-trait.clar"
+
+[contracts.sip-010-trait]
+path = "contracts/traits/sip-010-trait.clar"
+
+[contracts.playground-token]
+path = "contracts/playground-token.clar"
+depends_on = ["sip-010-trait"]
+
+[contracts.dev-badge]
+path = "contracts/dev-badge.clar"
+depends_on = ["sip-009-trait", "playground-token"]
 
 [networks.devnet]
 chain = "devnet"
@@ -22,12 +36,9 @@ chain = "mainnet"
 
 [repl.analysis]
 passes = ["check_checker"]
-check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
 
-# Check-checker settings:
-# trusted_sender: if true, inputs are trusted after tx_sender has been checked.
-# trusted_caller: if true, inputs are trusted after contract-caller has been checked.
-# callee_filter: if true, untrusted data may be passed into a private function without a
-# warning, if it gets checked inside. This check will also propagate up to the
-# caller.
-# More informations: https://www.hiro.so/blog/new-safety-checks-in-clarinet
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false

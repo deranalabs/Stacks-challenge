@@ -14,10 +14,11 @@
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "types": ["@stacks/clarinet-sdk/vitest"]
   },
   "include": [
     "node_modules/@stacks/clarinet-sdk/vitest-helpers/src",
-    "tests"
+    "tests/**/*.ts"
   ]
 }
