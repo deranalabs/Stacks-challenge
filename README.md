@@ -1,11 +1,11 @@
 # StackChallenge Builder Toolkit
 
-## 1. Hello-world Contract (Clarity 2/3 compatible)
+## 1. Hello-world Contract
 - File: `contracts/hello-world.clar`
 - Features:
-  - Stores the contract owner and ensures only the current owner can update it.
+  - Stores the contract owner; only the current owner can update it.
   - Read-only helper: `get-owner`.
-  - `set-owner` returns the new owner after asserting the caller is the current owner.
+  - `set-owner` returns the new owner after validating caller is the current owner.
 - Run locally with Clarinet:
   ```bash
   clarinet console
@@ -13,10 +13,10 @@
   (contract-call? .hello-world get-owner)
   ```
 
-## 2. Chainhook Registration Script
+## 2. Chainhook Registration
 - File: `index.ts`
-- Uses `@hirosystems/chainhooks-client` to register a hook that listens for `set-owner` calls.
-- Required env vars:
+- Uses `@hirosystems/chainhooks-client` to register a hook for `set-owner`.
+- Env:
   - `STACKS_NETWORK` (`mainnet` | `testnet`, default testnet)
   - `CHAINHOOKS_BASE_URL` (optional override)
   - `CONTRACT_IDENTIFIER` (e.g., `ST...HELLO.hello-world`)
@@ -29,7 +29,7 @@
 
 ## 3. Webhook Receiver
 - File: `webhook-server.ts`
-- Express server that accepts POST `/hooks/hello-world`, logs events to `data/chainhook-events.log`, and exposes a simple GET health endpoint.
+- Express server for POST `/hooks/hello-world`, logs to `data/chainhook-events.log`, with GET health.
 - Env:
   - `WEBHOOK_PORT` (default `4000`)
 - Run:
@@ -41,8 +41,7 @@
 ## Suggested Flow
 1. Start webhook server.
 2. Register chainhook via `index.ts`.
-3. Trigger `set-owner` on deployed contract (or via Clarinet) so Hiro sends events to your webhook.
-4. Commit logs/screenshots to boost GitHub progress.
+3. Call `set-owner` on deployed contract (or via Clarinet) so Hiro sends events to your webhook.
 
 ## Dependencies
 `npm install`
@@ -50,22 +49,22 @@
 - Dev: `ts-node`, `@types/node`, `@types/express`
 
 ## Testing
-- Jalankan semua tes: `npm test`
-- Jalankan lint: `npm run lint` (config minimal, abaikan TS sementara)
-- Struktur per-kontrak:  
-  - `tests/playground-token.test.ts` (transaksi di-skip karena serialisasi principal; edge cooldown aktif)  
-  - `tests/dev-badge.test.ts` (transfer principal di-skip; mint & edge cases aktif)  
-  - `tests/hello-world.test.ts` (transaksi set-owner di-skip; read-only aktif)  
-  - `tests/contracts.test.ts` adalah placeholder `describe.skip` untuk menghindari suite legacy.
-- Skips saat ini terkait limitasi principal serialization di clarinet-sdk. Aktifkan kembali saat SDK sudah mendukung.
+- Run all tests: `npm test`
+- Run lint: `npm run lint` (minimal config; TS linting not enforced)
+- Per-contract suites:
+  - `tests/playground-token.test.ts` — transactions skipped (principal serialization), cooldown edge active
+  - `tests/dev-badge.test.ts` — transfer (principal) skipped; mint + edge cases active
+  - `tests/hello-world.test.ts` — set-owner transactions skipped; read-only active
+  - `tests/contracts.test.ts` — placeholder `describe.skip` to avoid legacy suite
+- Skips stem from clarinet-sdk principal serialization; re-enable when fixed.
 
-## Deployment Settings
-- Template configs live under `settings/Devnet.toml`, `settings/Testnet.toml`, and `settings/Mainnet.toml`.
-- **Never commit real seed phrases.** Use `clarinet deployments encrypt` to generate an encrypted mnemonic and store that value instead of a plaintext phrase.
-- If you temporarily paste a mnemonic for local testing, revert it to a placeholder before pushing or sharing the repo.
+## Deployment
+- Config templates: `settings/Devnet.toml`, `settings/Testnet.toml`, `settings/Mainnet.toml`.
+- Do NOT commit real seed phrases. Use `clarinet deployments encrypt` for mnemonics.
+- Revert any temporary mnemonic to placeholders before sharing the repo.
 
 ## Tooling Notes
-- Clarinet `3.12.0` (Homebrew) is currently required; Clarity 4 keywords such as `stacks-block-time` are not yet available in the official CLI. Once Hiro releases a Clarinet build with Clarity 4 support, the contract can be updated to reintroduce the timestamp logic.
+- Clarinet `3.12.0` currently required; Clarity 4 keywords (e.g., `stacks-block-time`) not yet in official CLI. Update when Hiro releases Clarity 4 support.
 
 ## Deployed Contracts
 | Network  | Contract Identifier | Explorer link |
@@ -74,6 +73,6 @@
 | Mainnet  | `SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world` | [Explorer](https://explorer.hiro.so/contract/SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world?chain=mainnet) |
 
 ## Next Steps
-- Build a frontend with `@stacks/connect` + `@stacks/transactions` calling `set-owner`.
-- Deploy contract to mainnet/testnet and invite other wallets to interact for on-chain points.
-- Extend webhook to persist events in DB or broadcast to UI dashboards.
+- Build a frontend with `@stacks/connect` + `@stacks/transactions`.
+- Deploy contracts to testnet/mainnet and share contract IDs for UI calls.
+- Extend webhook to persist events or surface them in dashboards.
