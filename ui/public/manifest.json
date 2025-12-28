@@ -1,0 +1,16 @@
+{
+  "name": "Stacks Playground",
+  "short_name": "StacksPlay",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Playground to interact with Stacks contracts.",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "256x256",
+      "type": "image/svg+xml"
+    }
+  ]
+}

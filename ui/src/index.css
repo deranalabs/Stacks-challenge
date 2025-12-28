@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Clash+Display:wght@500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background-color: theme('colors.background');
+    color: theme('colors.foreground');
+    font-synthesis: none;
+    text-rendering: optimizelegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background-color: theme('colors.background');
+    color: theme('colors.foreground');
+  }
+
+  ::selection {
+    background: theme('colors.primary.DEFAULT');
+    color: theme('colors.primary.foreground');
+  }
+}
+
+@layer utilities {
+  .glow-border {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+      inset 0 0 40px rgba(124, 58, 237, 0.15);
+  }
+
+  .grid-mask {
+    background-image: theme('backgroundImage.grid');
+    background-size: 160px 160px;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
