@@ -1,16 +1,19 @@
 ;; Dev Badge (SIP-009)
-;; Sistem: Pay-to-Mint (Bayar 50 PLAY untuk dapat NFT)
+;; Pay-to-Mint System: Pay 50 PLAY tokens to get NFT
 
-;; Impl trait SIP-009
+;; Implement SIP-009 trait
 (impl-trait .sip-009-trait.sip-009-nft-trait)
 
-;; Konstanta & error codes
+;; Constants & error codes
 (define-constant MINT-PRICE u50000000) ;; 50 PLAY (decimals=6)
 (define-constant ERR-NOT-AUTH (err u401))
 (define-constant ERR-NOT-FOUND (err u404))
 (define-constant ERR-INVALID-RECIPIENT (err u400))
 (define-constant ERR-PAYMENT (err u402))
 (define-constant ERR-ALREADY-MINTED (err u403))
+
+;; Deployer constant (to receive payments)
+(define-constant CONTRACT-OWNER tx-sender)
 
 ;; Storage
 (define-map token-owners {id: uint} {owner: principal})
@@ -33,6 +36,7 @@
 
 ;; ========== Internal Helpers ==========
 
+;; Mint helper: CEI pattern
 (define-private (mint-internal (recipient principal))
   (let ((new-id (+ (var-get last-id) u1)))
     (var-set last-id new-id)
@@ -43,27 +47,27 @@
 
 ;; ========== Public Functions ==========
 
-;; Buy mint: Fungsi utama untuk membeli NFT
-;; Secara otomatis menarik 50 PLAY dari wallet user
+;; Buy mint: Main function to purchase NFT
+;; Automatically pulls 50 PLAY from user wallet to CONTRACT-OWNER
 (define-public (buy-mint)
   (let (
     (buyer tx-sender)
-    ;; Uang (Token) akan masuk ke kontrak ini
-    (recipient (as-contract tx-sender)) 
   )
-    ;; 1. Cek User belum pernah mint
+    ;; 1. Check if user hasn't minted before
     (asserts! (not (has-user-minted buyer)) ERR-ALREADY-MINTED)
 
-    ;; 2. TARIK PEMBAYARAN (Atomic Swap)
-    ;; Memanggil kontrak playground-token untuk transfer
-    (try! (contract-call? .playground-token transfer 
+    ;; 2. PULL PAYMENT (Atomic Swap)
+    ;; Call playground-token-v2 contract to transfer
+    ;; Money sent to CONTRACT-OWNER (not to this contract)
+    ;; FIX: Mengarah ke .playground-token-v2
+    (try! (contract-call? .playground-token-v2 transfer 
             MINT-PRICE      
             buyer           
-            recipient       
+            CONTRACT-OWNER          
             none            
     ))
 
-    ;; 3. Mint NFT jika pembayaran sukses
+    ;; 3. Mint NFT if payment successful
     (mint-internal buyer)
   )
 )
@@ -71,18 +75,18 @@
 ;; Transfer NFT (SIP-009 Standard)
 (define-public (transfer (id uint) (sender principal) (recipient principal))
   (let ((owner-data (map-get? token-owners {id: id})))
-    ;; Mencegah transfer ke burn address (opsional tapi bagus)
+    ;; Prevent transfer to burn address
     (asserts! (not (is-eq recipient 'ST000000000000000000002AMW42H)) ERR-INVALID-RECIPIENT)
     
     (match owner-data
       some-owner
         (begin
-          ;; Verifikasi pemilik
+          ;; Verify ownership
           (asserts! (is-eq tx-sender (get owner some-owner)) ERR-NOT-AUTH)
           (asserts! (is-eq sender (get owner some-owner)) ERR-NOT-AUTH)
           (asserts! (not (is-eq recipient sender)) ERR-INVALID-RECIPIENT)
           
-          ;; Update pemilik baru
+          ;; Update new owner
           (map-set token-owners {id: id} {owner: recipient})
           (print {type: "nft_transfer", token-id: id, sender: sender, recipient: recipient})
           (ok true))

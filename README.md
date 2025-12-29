@@ -1,78 +1,44 @@
 # StackChallenge Builder Toolkit
 
-## 1. Hello-world Contract
-- File: `contracts/hello-world.clar`
-- Features:
-  - Stores the contract owner; only the current owner can update it.
-  - Read-only helper: `get-owner`.
-  - `set-owner` returns the new owner after validating caller is the current owner.
-- Run locally with Clarinet:
-  ```bash
-  clarinet console
-  (contract-call? .hello-world set-owner 'ST...NEW)
-  (contract-call? .hello-world get-owner)
-  ```
+Toolkit for building, testing, and monitoring Stacks smart contracts. Includes SIP-009/SIP-010 implementations, a Hello World contract, and Chainhook integration for event tracking.
 
-## 2. Chainhook Registration
-- File: `index.ts`
-- Uses `@hirosystems/chainhooks-client` to register a hook for `set-owner`.
-- Env:
-  - `STACKS_NETWORK` (`mainnet` | `testnet`, default testnet)
-  - `CHAINHOOKS_BASE_URL` (optional override)
-  - `CONTRACT_IDENTIFIER` (e.g., `ST...HELLO.hello-world`)
-  - `CHAINHOOKS_WEBHOOK_URL` (e.g., `http://localhost:4000/hooks/hello-world`)
-  - `HIRO_API_KEY` (if using hosted Chainhooks)
-- Run:
-  ```bash
-  npx ts-node index.ts
-  ```
+## Deployed Contracts (Testnet)
+| Contract | Identifier | Explorer |
+| :--- | :--- | :---: |
+| SIP-010 Trait | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.sip-010-trait-v2` | [Explorer](https://explorer.hiro.so/txid/0x27b1770363a171815a5457acf6fcbb76d6f2f22da01ae2c7c0cb7f44933830c1?chain=testnet) |
+| SIP-009 Trait | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.sip-009-trait-v2` | [Explorer](https://explorer.hiro.so/txid/0xa926d70dcb556b115449e4656b2b7ab465bd0e519721ea867ebed6471d963f43?chain=testnet) |
+| Hello World | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.hello-world-v2` | [Explorer](https://explorer.hiro.so/txid/0xc3a1dfa64f954b2c7fde2729804dfedaa7b12b85cdc777b33dc2578b2d06d8e9?chain=testnet) |
+| Playground Token | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.playground-token-v2` | [Explorer](https://explorer.hiro.so/txid/0x1214d0dc4f33b3716c3c1dd0468587913fd6fc4c6247aa93fb496c5de67c0d59?chain=testnet) |
+| Dev Badge (NFT) | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.dev-badge-v3` | [Explorer](https://explorer.hiro.so/txid/0xf744b7b8c1cb2dc95f42bcd498a4eee5dc33ddadcc2d503b5a0b7fd5234b7ac4?chain=testnet) |
 
-## 3. Webhook Receiver
-- File: `webhook-server.ts`
-- Express server for POST `/hooks/hello-world`, logs to `data/chainhook-events.log`, with GET health.
-- Env:
-  - `WEBHOOK_PORT` (default `4000`)
+Mainnet: `SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world`
+
+## Contracts
+- `hello-world.clar`: owner storage and transfer (`get-owner`, `set-owner`).
+- `playground-token.clar`: SIP-010 FT with faucet cooldown (uses `stacks-block-height`).
+- `dev-badge.clar`: SIP-009 NFT, pay-to-mint via `.playground-token-v2`.
+
+## Chainhook and Webhook
+- `webhook-server.ts`: receiver for POST `/hooks/hello-world`, logs to `data/chainhook-events.log`.
+- `index.ts`: registers Chainhook via `@hirosystems/chainhooks-client`.
 - Run:
   ```bash
   npx ts-node webhook-server.ts
+  npx ts-node index.ts
   ```
-- Tail logs: `tail -f data/chainhook-events.log`
 
-## Suggested Flow
-1. Start webhook server.
-2. Register chainhook via `index.ts`.
-3. Call `set-owner` on deployed contract (or via Clarinet) so Hiro sends events to your webhook.
-
-## Dependencies
-`npm install`
-- Runtime: `@hirosystems/chainhooks-client`, `express`
-- Dev: `ts-node`, `@types/node`, `@types/express`
-
-## Testing
-- Run all tests: `npm test`
-- Run lint: `npm run lint` (minimal config; TS linting not enforced)
-- Per-contract suites:
-  - `tests/playground-token.test.ts` — transactions skipped (principal serialization), cooldown edge active
-  - `tests/dev-badge.test.ts` — transfer (principal) skipped; mint + edge cases active
-  - `tests/hello-world.test.ts` — set-owner transactions skipped; read-only active
-  - `tests/contracts.test.ts` — placeholder `describe.skip` to avoid legacy suite
-- Skips stem from clarinet-sdk principal serialization; re-enable when fixed.
+## Testing and Tooling
+- Install: `npm install`
+- Tests: `npm test`
+- Lint: `npm run lint`
+- Clarinet: `clarinet check` (Clarinet 3.12.0; Clarity 4 keywords not yet in the CLI)
 
 ## Deployment
-- Config templates: `settings/Devnet.toml`, `settings/Testnet.toml`, `settings/Mainnet.toml`.
-- Do NOT commit real seed phrases. Use `clarinet deployments encrypt` for mnemonics.
-- Revert any temporary mnemonic to placeholders before sharing the repo.
+- Use `settings/*.toml`; do not commit mnemonics. Prefer `clarinet deployments encrypt`.
+- When applying a plan, use `--use-on-disk-deployment-plan` to keep the curated plan.
 
-## Tooling Notes
-- Clarinet `3.12.0` currently required; Clarity 4 keywords (e.g., `stacks-block-time`) not yet in official CLI. Update when Hiro releases Clarity 4 support.
-
-## Deployed Contracts
-| Network  | Contract Identifier | Explorer link |
-|----------|--------------------|---------------|
-| Testnet  | `ST1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG19Q0YD2Q.hello-world` | [Tx 0xc17c…b89](https://explorer.hiro.so/txid/0xc17ccebd98129efaaabaaabf54fb57a2e1798d14dd4981206a9fdbb735ba8b89?chain=testnet) |
-| Mainnet  | `SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world` | [Explorer](https://explorer.hiro.so/contract/SP1B3AYKVPXY4MZXWPKNGHGYGRDP3AFKG18BTW5QV.hello-world?chain=mainnet) |
-
-## Next Steps
-- Build a frontend with `@stacks/connect` + `@stacks/transactions`.
-- Deploy contracts to testnet/mainnet and share contract IDs for UI calls.
-- Extend webhook to persist events or surface them in dashboards.
+## Roadmap
+- [x] Deploy core contracts (Token, NFT, Hello World)
+-- [x] Integrate Chainhooks
+- [ ] Frontend UI (`@stacks/connect`)
+- [ ] Webhook events dashboard

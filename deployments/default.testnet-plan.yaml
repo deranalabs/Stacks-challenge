@@ -8,25 +8,4 @@ plan:
   batches:
     - id: 0
       transactions:
-        - contract-publish:
-            contract-name: sip-010-trait
-            expected-sender: "ST1B3AYKVPXY4MZVKPNGHGYGRDP3AFKG19Q0YD2Q"
-            cost: 10000
-            path: contracts/traits/sip-010-trait.clar
-            anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: sip-009-trait
-            expected-sender: "ST1B3AYKVPXY4MZVKPNGHGYGRDP3AFKG19Q0YD2Q"
-            cost: 10000
-            path: contracts/traits/sip-009-trait.clar
-            anchor-block-only: true
-            clarity-version: 2
-        - contract-publish:
-            contract-name: dev-badge
-            expected-sender: "ST1B3AYKVPXY4MZVKPNGHGYGRDP3AFKG19Q0YD2Q"
-            cost: 10000
-            path: contracts/dev-badge.clar
-            anchor-block-only: true
-            clarity-version: 4
-      epoch: "3.3"
+      epoch: "2.05"
