@@ -1,0 +1,16 @@
+{
+  "sip": 16,
+  "name": "Stacks Dev Badge",
+  "description": "Badge eksklusif untuk developer yang telah menyelesaikan tantangan Smart Contract Playground.",
+  "image": "https://deranalabs.github.io/Stacks-challenge/ui/public/badge.svg",
+  "attributes": [
+    {
+      "trait_type": "Level",
+      "value": "Builder"
+    },
+    {
+      "trait_type": "Year",
+      "value": "2025"
+    }
+  ]
+}
