@@ -6,25 +6,15 @@
   "private": true,
   "scripts": {
     "test": "vitest run",
-    "test:report": "vitest run -- --coverage --costs",
-    "test:watch": "chokidar \"tests/**/*.ts\" \"contracts/**/*.clar\" -c \"npm run test:report\"",
+    "test:report": "vitest run --coverage",
     "lint": "eslint ."
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@stacks/transactions": "^7.2.0",
-    "@types/node": "^24.4.0",
-    "chokidar-cli": "^3.0.0",
-    "express": "^5.2.1",
-    "vitest-environment-clarinet": "^3.0.0"
+    "@types/node": "^20.0.0"
   },
   "devDependencies": {
-    "@hirosystems/clarinet-sdk": "^3.8.1",
-    "@playwright/test": "^1.57.0",
     "@stacks/clarinet-sdk": "^3.12.0",
-    "@stacks/transactions": "^6.16.1",
-    "eslint": "^9.39.2",
-    "vitest": "^4.0.16"
+    "vitest": "^1.0.0",
+    "vitest-environment-clarinet": "^3.0.2"
   }
 }

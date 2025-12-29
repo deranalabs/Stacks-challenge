@@ -1,6 +1,7 @@
 ;; Playground Coin (PLAY) - SIP-010 Fungible Token
 ;; Decimals: 6, Name: "Playground Coin", Symbol: "PLAY"
 ;; Fitur: claim-tokens (faucet) hanya boleh 1x per 10 block per user.
+;; Compatible with Clarity v4
 
 ;; Implement SIP-010 Trait
 (impl-trait .sip-010-trait.sip-010-ft-trait)
@@ -17,18 +18,18 @@
 (define-constant TOKEN-NAME "Playground Coin")
 (define-constant TOKEN-SYMBOL "PLAY")
 (define-constant TOKEN-DECIMALS u6)
-(define-constant MAX-SUPPLY u100000000000000) ;; batas suplai opsional
+(define-constant MAX-SUPPLY u100000000000000) ;; batas suplai
 
 ;; Faucet config
 (define-constant FAUCET-AMOUNT u100000000) ;; 100 PLAY * 1_000_000 (decimals=6)
-(define-constant COOLDOWN-BLOCKS u10)
+(define-constant COOLDOWN-BLOCKS u10) ;; 10 block cooldown
 
 ;; Penyimpanan saldo & total suplai
 (define-map balances {account: principal} {amount: uint})
 (define-data-var total-supply uint u0)
 
-;; Map untuk mencatat block terakhir klaim faucet
-(define-map last-claimed {account: principal} {height: uint})
+;; COOLDOWN TRACKING - block-height IS SUPPORTED in Clarity v4
+(define-map last-claim-block {user: principal} {block: uint})
 
 ;; SIP-010 getters (response wrapped in ok)
 (define-read-only (get-name)
@@ -49,6 +50,18 @@
 (define-read-only (get-token-uri)
   (ok (some "https://playground-token.example/metadata.json")))
 
+;; Helper: cek apakah user bisa claim
+(define-read-only (can-claim (user principal))
+  (let ((last-block (default-to u0 (get block (map-get? last-claim-block {user: user})))))
+    (>= (- block-height last-block) COOLDOWN-BLOCKS)))
+
+;; Helper: dapatkan sisa blocks hingga bisa claim lagi
+(define-read-only (blocks-until-claim (user principal))
+  (let ((last-block (default-to u0 (get block (map-get? last-claim-block {user: user})))))
+    (if (>= (- block-height last-block) COOLDOWN-BLOCKS)
+        u0
+        (- COOLDOWN-BLOCKS (- block-height last-block)))))
+
 ;; Internal: tambah saldo
 (define-private (add-balance (who principal) (amt uint))
   (let ((current (default-to u0 (get amount (map-get? balances {account: who})))))
@@ -61,7 +74,7 @@
         (begin
           (map-set balances {account: who} {amount: (- current amt)})
           (ok true))
-        ERR-INSUFFICIENT))) ;; u100: insufficient balance
+        ERR-INSUFFICIENT)))
 
 ;; SIP-010 transfer
 (define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
@@ -75,36 +88,28 @@
     (print {type: "ft_transfer", sender: sender, recipient: recipient, amount: amount, memo: memo})
     (ok true)))
 
-;; Faucet: 1x per 10 block
+;; Faucet: mint dengan cooldown dan supply cap
 (define-public (claim-tokens)
-  (let
-      (
+  (let (
         (caller tx-sender)
-        (now block-height)
-        (last-claim (map-get? last-claimed {account: caller}))
-      )
-    (match last-claim
-      last-data
-        (if (>= (- now (get height last-data)) COOLDOWN-BLOCKS)
-            (let ((new-supply (+ (var-get total-supply) FAUCET-AMOUNT)))
-              (asserts! (<= new-supply MAX-SUPPLY) ERR-SUPPLY)
-              (add-balance caller FAUCET-AMOUNT)
-              (var-set total-supply new-supply)
-              (map-set last-claimed {account: caller} {height: now})
-              (print {type: "ft_mint", recipient: caller, amount: FAUCET-AMOUNT})
-              (ok true))
-            ERR-COOLDOWN) ;; u200: cooldown not passed
-      ;; First time claim, no record exists
-      (begin
-        (let ((new-supply (+ (var-get total-supply) FAUCET-AMOUNT)))
-          (asserts! (<= new-supply MAX-SUPPLY) ERR-SUPPLY)
-          (add-balance caller FAUCET-AMOUNT)
-          (var-set total-supply new-supply)
-          (map-set last-claimed {account: caller} {height: now})
-          (print {type: "ft_mint", recipient: caller, amount: FAUCET-AMOUNT})
-          (ok true))))))
+        (new-supply (+ (var-get total-supply) FAUCET-AMOUNT))
+        (last-block (default-to u0 (get block (map-get? last-claim-block {user: caller}))))
+       )
+    ;; Check cooldown - block-height IS available in Clarity v4
+    (asserts! (>= (- block-height last-block) COOLDOWN-BLOCKS) ERR-COOLDOWN)
+    ;; Check supply cap
+    (asserts! (<= new-supply MAX-SUPPLY) ERR-SUPPLY)
+    
+    ;; Update state (CEI pattern)
+    (map-set last-claim-block {user: caller} {block: block-height})
+    (add-balance caller FAUCET-AMOUNT)
+    (var-set total-supply new-supply)
+    
+    ;; Event
+    (print {type: "ft_mint", recipient: caller, amount: FAUCET-AMOUNT, block: block-height})
+    (ok true)))
 
-;; Mint internal (untuk extensibility; tidak dipakai publik selain faucet)
+;; Mint internal (untuk extensibility)
 (define-private (mint (to principal) (amt uint))
   (begin
     (add-balance to amt)
